@@ -1,0 +1,17 @@
+.DS_Store
+.env
+.venv/
+.streamlit/
+__pycache__/
+*.py[cod]
+
+data/*
+!data/.gitkeep
+!data/history/
+data/history/*
+!data/history/.gitkeep
+
+outputs/*
+!outputs/.gitkeep
+
+*.log
