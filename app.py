@@ -43,12 +43,12 @@ from src.workstation_data import (
 PROJECT_ROOT = Path(__file__).resolve().parent
 PAGES = ["Dashboard", "Shortlist", "Replay", "History", "Activity", "Files"]
 PAGE_DESCRIPTIONS = {
-    "Dashboard": "盘前 / 盘中主工作台：状态、候选表、区间和催化都集中在这里。",
-    "Shortlist": "当前候选池，支持过滤、排序和单票拆解。",
-    "Replay": "复盘命中率和历史 outcome 统计。",
-    "History": "历史 shortlist 存档预览。",
-    "Activity": "最近运行、探针、刷新、归档事件。",
-    "Files": "当前本地输出、状态文件和 sqlite 索引。",
+    "Dashboard": "Pre-market and intraday command center for status, candidates, zones, and catalysts.",
+    "Shortlist": "Current candidate pool with filtering, sorting, and single-symbol inspection.",
+    "Replay": "Replay hit rates, model validation, and historical outcome summaries.",
+    "History": "Preview archived shortlist outputs.",
+    "Activity": "Recent run, probe, refresh, and archive events.",
+    "Files": "Current local outputs, status files, and sqlite index.",
 }
 SORT_OPTIONS = {
     "total_score": "Total Score",
@@ -162,7 +162,7 @@ def render_shell(workspace: dict[str, Any]) -> str:
     page = st.radio("Workspace", options=PAGES, key="workspace_page", horizontal=True, label_visibility="collapsed")
     st.caption(PAGE_DESCRIPTIONS[page])
     if workspace["runtime"]["alpaca_credential_hint"] == "broker_like" and not workspace["runtime"]["mock_mode"]:
-        st.warning("当前 .env 里加载到的是 broker 风格的 Alpaca key。这个项目现在只支持 Trading API / Market Data API headers，请把 .env 里的 ALPACA_API_KEY / ALPACA_API_SECRET 换成新的 Trading API key/secret。")
+        st.warning("The current .env appears to contain broker-style Alpaca credentials. This project only supports Trading API / Market Data API header authentication, so please replace ALPACA_API_KEY and ALPACA_API_SECRET with Trading API credentials.")
     return page
 
 
@@ -214,16 +214,16 @@ def render_dashboard_page(workspace: dict[str, Any]) -> None:
         ("Tradeable Ideas", str(int(latest_df.get("tradeable", pd.Series(dtype="bool")).sum()) if not latest_df.empty else 0), "Rows passing hard tradeability rules"),
         ("Average Score", f"{float(latest_df['total_score'].mean()):.2f}" if not latest_df.empty and "total_score" in latest_df.columns else "0.00", "Mean total score"),
         ("High Score", str(int((pd.to_numeric(latest_df.get('total_score'), errors='coerce').fillna(0.0) >= 6.0).sum()) if not latest_df.empty else 0), "Score >= 6.0"),
-        ("Breakout Watch", str(int((latest_df.get("status_tag", pd.Series(dtype="object")) == "Breakout Watch").sum()) if not latest_df.empty else 0), "结构偏突破"),
+        ("Breakout Watch", str(int((latest_df.get("status_tag", pd.Series(dtype="object")) == "Breakout Watch").sum()) if not latest_df.empty else 0), "Breakout-leaning structures"),
     ])
     render_ml_summary(run_status, latest_df)
 
-    render_section_header("Top Candidates", "当前最值得盯的 shortlist，下面直接接单票详情。")
+    render_section_header("Top Candidates", "The highest-priority shortlist names, followed directly by single-symbol detail.")
     _render_candidate_workspace(workspace, limit=12)
 
     provider_left, provider_right = st.columns([1.0, 1.0])
     with provider_left:
-        render_section_header("Provider Health", "市场数据、新闻和 SEC 数据源的最新状态。")
+        render_section_header("Provider Health", "Latest health status for market data, news, and SEC data sources.")
         render_detail_panel(
             "Providers",
             [
@@ -236,7 +236,7 @@ def render_dashboard_page(workspace: dict[str, Any]) -> None:
             ],
         )
     with provider_right:
-        render_section_header("Run Summary", "最新一次输出和本地文件写入情况。")
+        render_section_header("Run Summary", "Latest output summary and local file write status.")
         render_detail_panel(
             "Outputs",
             [
@@ -251,13 +251,13 @@ def render_dashboard_page(workspace: dict[str, Any]) -> None:
 
     news_left, news_right = st.columns([1.0, 1.0])
     with news_left:
-        render_section_header("Recent News", "最新入库的 Alpaca News 和 SEC 事件。")
+        render_section_header("Recent News", "Most recently ingested Alpaca News and SEC events.")
         if workspace["recent_news"].empty:
-            st.info("当前环境里还没有成功入库的新闻事件。")
+            st.info("No news events have been successfully ingested in the current environment yet.")
         else:
             st.dataframe(workspace["recent_news"], hide_index=True, width="stretch")
     with news_right:
-        render_section_header("Recent Activity", "最近运行、刷新、探针和归档记录。")
+        render_section_header("Recent Activity", "Recent run, refresh, probe, and archive records.")
         activity = pd.DataFrame(workspace["activity"]["records"][:12])
         if activity.empty:
             st.info("No activity records are available yet.")
@@ -267,7 +267,7 @@ def render_dashboard_page(workspace: dict[str, Any]) -> None:
 
 
 def render_shortlist_page(workspace: dict[str, Any]) -> None:
-    render_section_header("Shortlist", "过滤、排序后查看当前最值得跟踪的候选股。")
+    render_section_header("Shortlist", "Filter and sort the current candidates to focus on the best names to track.")
     run_status = workspace["run_status"]["data"]
     render_detail_panel(
         "Confidence",
@@ -286,7 +286,7 @@ def _render_candidate_workspace(workspace: dict[str, Any], limit: int | None) ->
     latest_df = workspace["latest"]["data"]
     filtered = apply_shortlist_filters(latest_df)
     if filtered.empty:
-        st.info("当前没有候选股满足过滤条件，或者最新运行还没有产出可用 shortlist。")
+        st.info("No candidates currently match the active filters, or the latest run has not produced a usable shortlist yet.")
         return
     sort_by = st.session_state.get("sort_by", "total_score")
     filtered = filtered.sort_values(sort_by, ascending=False).reset_index(drop=True)
@@ -321,7 +321,7 @@ def _render_candidate_workspace(workspace: dict[str, Any], limit: int | None) ->
 
 
 def render_history_page(workspace: dict[str, Any]) -> None:
-    render_section_header("History", "历史 shortlist 存档直接在页面里预览。")
+    render_section_header("History", "Preview archived shortlist files directly in the app.")
     entries = workspace["history"]["entries"]
     if not entries:
         st.info("No history files are available yet.")
@@ -337,7 +337,7 @@ def render_history_page(workspace: dict[str, Any]) -> None:
 
 
 def render_activity_page(workspace: dict[str, Any]) -> None:
-    render_section_header("Activity", "系统最近做了什么，一眼看清。")
+    render_section_header("Activity", "A quick view of what the system has been doing recently.")
     records = pd.DataFrame(workspace["activity"]["records"])
     if records.empty:
         st.info("No activity records are available yet.")

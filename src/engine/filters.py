@@ -23,7 +23,7 @@ def build_shortlist(scored_df: pd.DataFrame, settings: EngineSettings) -> pd.Dat
         shortlist["tradeable"] = False
         shortlist["not_tradeable_reason"] = shortlist["not_tradeable_reason"].where(
             shortlist["not_tradeable_reason"].astype(str).str.strip() != "",
-            "未达到硬过滤标准，先作为观察名单保留",
+            "Did not meet the hard-filter thresholds, so it is being kept as watchlist-only.",
         )
 
     shortlist = shortlist.sort_values(
@@ -38,7 +38,7 @@ def build_shortlist(scored_df: pd.DataFrame, settings: EngineSettings) -> pd.Dat
         preferred["status_tag"] = preferred["status_tag"].replace({"Ignore": "Risky"})
         preferred["action_note"] = preferred["action_note"].where(
             preferred["action_note"].astype(str).str.strip() != "",
-            "当前更适合作为观察候选，不适合主动追击",
+            "Better kept as a watch candidate for now rather than actively chased.",
         )
     shortlist = preferred
 

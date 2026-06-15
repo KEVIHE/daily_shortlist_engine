@@ -35,43 +35,43 @@ def build_action_note(row: dict[str, Any]) -> str:
     """Return a short execution-oriented note without issuing a buy order."""
     tag = str(row.get("status_tag") or "Ignore")
     if tag == "Breakout Watch":
-        return "只适合突破确认后跟随"
+        return "Only suitable after breakout confirmation."
     if tag == "Pullback Watch":
-        return "优先等回踩，不追高"
+        return "Prefer to wait for a pullback instead of chasing."
     if tag == "Extended":
-        return "虽然强，但已过度延伸"
+        return "Momentum is still strong, but the move is already extended."
     if tag == "Risky":
-        return "催化或走势存在噪音，谨慎"
-    return "暂不纳入主动交易"
+        return "Catalyst or price action is noisy, so stay cautious."
+    return "Not suitable for active trading right now."
 
 
 def build_selection_reason(row: dict[str, Any]) -> str:
     """Summarize why the symbol survived into the shortlist."""
     reasons: list[str] = []
     if row.get("news_score", 0.0) >= 6.0:
-        reasons.append("催化新鲜")
+        reasons.append("fresh catalyst")
     if row.get("relative_volume", 0.0) >= 2.0:
-        reasons.append("量能放大")
+        reasons.append("volume expansion")
     if row.get("breakout_ready_score", 0.0) >= 5.0:
-        reasons.append("结构接近突破")
+        reasons.append("structure is near breakout")
     if abs(row.get("distance_to_vwap_pct", 0.0)) <= 1.0:
-        reasons.append("位置接近VWAP")
+        reasons.append("price is near VWAP")
     if row.get("spread_pct", 0.0) <= 0.4:
-        reasons.append("点差可控")
-    return "、".join(reasons) or "进入候选池但需要更多确认"
+        reasons.append("spread is manageable")
+    return ", ".join(reasons) or "made the candidate pool but still needs more confirmation"
 
 
 def build_risk_text(row: dict[str, Any]) -> str:
     """Summarize the main risk factors behind the candidate."""
     risks: list[str] = []
     if row.get("spread_pct", 0.0) > 0.7:
-        risks.append("点差偏宽")
+        risks.append("spread is wide")
     if row.get("overextension_score", 0.0) >= 6.0:
-        risks.append("离VWAP过远")
+        risks.append("too far from VWAP")
     if row.get("headline_strength", 0.0) <= 2.5:
-        risks.append("催化解释弱")
+        risks.append("catalyst explanation is weak")
     if row.get("halt_risk_proxy", 0.0) >= 5.0:
-        risks.append("波动过急")
+        risks.append("price action is too abrupt")
     if row.get("relative_volume", 0.0) < 1.0:
-        risks.append("量能确认不足")
-    return "、".join(risks) or "主要风险可控，但仍需手动盯盘"
+        risks.append("volume confirmation is weak")
+    return ", ".join(risks) or "main risks look manageable, but the name still needs manual monitoring"

@@ -1,48 +1,42 @@
 # Daily Shortlist Workstation
 
-一个本地运行的美股短线分析面板，用来把行情、新闻和简单的规则模型整理成当天的候选名单，帮助我更快判断“今天该先看谁”。
+A local intraday stock shortlist and analysis workstation for US equities.
 
-这个项目不是自动交易机器人，也不会直接下单。它更像一个盘前 / 盘中研究工具：先把值得关注的股票筛出来，再给出价格区间、结构判断和风险提示，最后由我自己在 IBKR 手动执行。
+This project is not an auto-trading bot and it does not place orders. The goal is to combine market data, news, and simple explainable rules into a daily shortlist so I can decide which names deserve attention before or during the trading session. Final execution is still manual.
 
-## 我为什么做这个项目
+## Why I built this
 
-我一直对短线市场里“消息如何转化为价格波动”这件事很感兴趣。大学里学过一些经济相关内容，后来在看美股的时候，越来越明显地感觉到：
+I became interested in the way short-term volatility shows up around news, unusual volume, and repeated market attention. In practice, the names that move the most are often the ones that start appearing in movers lists, news feeds, and recurring keywords before the rest of the market fully reacts.
 
-- 短时间内波动大的股票，往往先出现在异动榜、新闻流和热门关键词里
-- 单靠看新闻太慢，单靠看价格又容易没有上下文
-- 真正有用的，不是一个“神预测模型”，而是一套能快速整理候选、说明理由、提示风险的分析流程
+I built this project as a personal research tool to make that process more structured:
 
-所以我做了这套系统，把几个最实用的环节串起来：
+- pull market data from Alpaca
+- pull catalyst information from Alpaca News and SEC RSS
+- turn those inputs into features and scores
+- generate a shortlist with structure tags and price zones
+- save each run for later review and validation
 
-- 从 Alpaca 拉市场数据
-- 从 Alpaca News 和 SEC RSS 拉催化信息
-- 做一层解释性比较强的特征和评分
-- 给出 shortlist、结构标签和关键价格区间
-- 把结果存下来，方便后面复盘和继续验证
+## What the project does today
 
-## 这个项目现在能做什么
+### 1. Builds a daily shortlist
 
-### 1. 生成当日 shortlist
+The system creates a seed universe from a few practical sources:
 
-系统每天会从几类信息里先构建候选池：
+- Alpaca movers
+- symbols that appear in recent Alpaca News or SEC RSS events
+- a small fallback watchlist so the system is still usable when live data is thin
 
-- Alpaca movers / 异动股
-- Alpaca News / SEC RSS 里最近出现的股票
-- 一组核心观察名单，防止数据源很安静时完全没有候选
+It then enriches those symbols with market context such as:
 
-然后再补齐这些股票的市场上下文，包括：
-
-- snapshot
-- latest quote
-- latest bar
+- snapshots
+- latest quotes
+- latest bars
 - intraday bars
 - daily bars
 
-最后为每只股票生成一组特征，做筛选和排序。
+### 2. Explains why a stock made the list
 
-### 2. 解释为什么这只股票会入选
-
-每只股票都会有一套比较透明的解释字段，而不是只有一个黑箱分数。当前会输出：
+This is not just a ranking table. Each candidate gets explainable fields such as:
 
 - `news_score`
 - `setup_score`
@@ -57,31 +51,31 @@
 - `risk_note`
 - `action_note`
 
-也就是说，不只是告诉你“它排第几”，还会说明：
+So the output is not only "what ranked highest" but also:
 
-- 它为什么进候选池
-- 结构更像 breakout 还是 pullback
-- 现在适不适合主动交易
-- 最主要的风险在哪里
+- why it entered the candidate pool
+- whether the structure is closer to breakout or pullback
+- whether it is currently tradeable or only watchable
+- what the main risk is
 
-### 3. 给出短线观察区间
+### 3. Produces practical intraday price zones
 
-系统不会直接给出“买入建议”或“保证上涨目标”，而是给一组更适合盘中观察的价格带：
+Instead of giving hard buy targets or black-box predictions, the system generates price zones that are more useful for manual observation:
 
 - `Base Range`
 - `Breakout Zone`
 - `Pullback Zone`
 - `Invalidation`
 
-这些区间是根据当前价、VWAP、近端波动和最近支撑/阻力算出来的，用来帮助判断：
+These are based on current price, VWAP, recent volatility, and nearby support/resistance. The goal is to answer questions like:
 
-- 现在是在合理观察区，还是已经太延伸
-- 更适合等突破，还是等回踩
-- 失效位在哪里
+- is the stock still in a reasonable area to watch, or already too extended
+- is it better treated as a breakout setup or a pullback setup
+- where does the trade idea stop making sense
 
-### 4. 本地仪表盘查看结果
+### 4. Shows everything in a local Streamlit workstation
 
-项目用 Streamlit 做了一个本地工作台，主要页面包括：
+The project includes a local Streamlit app with these main pages:
 
 - `Dashboard`
 - `Shortlist`
@@ -90,90 +84,88 @@
 - `Activity`
 - `Files`
 
-我平时主要看的是：
+In day-to-day use, the most important parts are:
 
-- 顶部状态栏：当前是 live 还是 mock，数据源是否连通
-- shortlist 主表：今天先盯哪些股票
-- 单票详情：价格区间、quote、bars、新闻、风险说明
-- replay：历史候选的简单命中情况和后续研究入口
+- the status bar: live vs mock mode, provider health, recent refresh
+- the shortlist table: which names deserve attention first
+- the detail panel: price zones, quotes, bars, news, and risk notes
+- the replay page: basic review statistics and a place for later validation work
 
-### 5. 记录运行结果，方便复盘
+### 5. Stores outputs for later review
 
-每次运行都会写出：
+Each run writes:
 
-- 最新 shortlist CSV
-- HTML 报告
+- the latest shortlist CSV
+- an HTML report
 - `run_status.json`
 - `activity_log.json`
 - `latest_context.json`
 - `shortlist.db`
 
-其中 `SQLite` 会保存：
+SQLite is used to keep:
 
-- 候选快照
-- 新闻事件
-- 区间结果
-- 模型运行记录
+- candidate snapshots
+- news events
+- range outcomes
+- model run metadata
 
-这部分是为了以后继续做 replay、策略验证和 walk-forward 检查。
+That makes it possible to review prior outputs and continue building replay and validation logic over time.
 
-## 从数据到候选，整个流程是怎么跑的
+## End-to-end pipeline
 
-这是这个项目最核心的一条链路：
+This is the core flow from raw data to final shortlist:
 
-1. 读取 `.env` 和运行参数  
-2. 探测 Alpaca / News / SEC RSS 当前是否可用  
-3. 拉取 movers，作为第一层候选  
-4. 拉取 Alpaca News 和 SEC RSS，补充有催化的股票  
-5. 合并成候选 seed symbols  
-6. 为这些 symbol 拉 snapshot、quote、bars 等市场数据  
-7. 生成特征  
-8. 做规则评分  
-9. 计算区间模型  
-10. 应用硬过滤和 tradeable 规则  
-11. 生成 shortlist  
-12. 写入 CSV / HTML / SQLite / 本地状态文件  
-13. 在 Streamlit 页面里展示
+1. Load `.env` and runtime settings
+2. Probe Alpaca, News, and SEC RSS status
+3. Pull movers as the first candidate source
+4. Pull Alpaca News and SEC RSS events as catalyst sources
+5. Merge these into a seed symbol list
+6. Fetch snapshots, quotes, and bars for those symbols
+7. Build features
+8. Apply explainable rule-based scoring
+9. Apply the range model
+10. Apply hard filters and tradeability checks
+11. Build the final shortlist
+12. Write CSV, HTML, SQLite, and local status files
+13. Display the result in Streamlit
 
-简单说，这套程序不是“先预测所有股票”，而是：
+In simple terms, the system does not try to predict every stock in the market. It first finds the stocks worth watching, then decides which ones are worth trading.
 
-**先把值得看的股票找出来，再判断哪些更值得交易。**
+## Scoring logic
 
-## 评分逻辑
+The main score is still rule-based and explainable. The current scoring logic mainly asks four things:
 
-目前主评分仍然是可解释的规则模型，核心考虑的是四件事：
+- is the catalyst fresh enough
+- is the liquidity good enough
+- is the structure clean enough
+- is the risk too high
 
-- 催化够不够新
-- 流动性够不够好
-- 当前结构够不够清晰
-- 风险是不是太高
-
-总分大致由下面几部分组成：
+The total score is built from:
 
 - catalyst / news
 - setup
 - liquidity
 - risk
-- ml（如果模型层可用）
+- ml, if the ML layer is available
 
-如果某只股票满足这些问题中的任意几个，它会被降权或者直接排除：
+A name is downgraded or filtered out when it shows one or more of these problems:
 
-- spread 太宽
-- 成交额太低
-- 相对量能不够
-- 没有明确催化，只有随机波动
-- 已经明显延伸，不适合继续追
+- spread is too wide
+- dollar volume is too low
+- relative volume is too weak
+- there is no clear catalyst and the move looks random
+- the stock is already too extended to chase
 
-## 目录结构
+## Directory structure
 
 ```text
 daily_shortlist_engine/
-├── app.py                  # Streamlit 本地工作台
-├── main.py                 # 单次运行入口
+├── app.py
+├── main.py
 ├── requirements.txt
 ├── .env.example
-├── data/                   # 运行生成的数据文件（默认不提交）
-├── outputs/                # 导出的 CSV / HTML（默认不提交）
+├── data/
+├── outputs/
 └── src/
     ├── alpaca_client.py
     ├── project_env.py
@@ -213,7 +205,7 @@ daily_shortlist_engine/
         └── strategy_templates.py
 ```
 
-## 当前技术栈
+## Tech stack
 
 - Python
 - Streamlit
@@ -224,15 +216,15 @@ daily_shortlist_engine/
 - scikit-learn
 - LightGBM
 
-## 如何在本地运行
+## Running locally
 
-### 1. 创建并配置环境变量
+### 1. Create and configure the environment file
 
 ```bash
 cp .env.example .env
 ```
 
-最少需要填这些：
+At minimum, fill in:
 
 ```env
 ALPACA_API_KEY=...
@@ -242,9 +234,9 @@ SEC_USER_AGENT=Your Name your@email.com
 MOCK_MODE=false
 ```
 
-如果 `SEC_USER_AGENT` 还是占位值，SEC RSS 会被标记为 unavailable，这是预期行为。
+If `SEC_USER_AGENT` is still a placeholder, SEC RSS will remain unavailable by design.
 
-### 2. 安装依赖
+### 2. Install dependencies
 
 ```bash
 python -m venv .venv
@@ -252,69 +244,70 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-如果是 macOS 且 `lightgbm` 安装后导入失败，通常需要额外安装 `libomp`。
+On macOS, `lightgbm` may require `libomp` if import fails after installation.
 
-### 3. 运行数据流程
+### 3. Run the data pipeline
 
 ```bash
 python main.py
 ```
 
-### 4. 打开本地页面
+### 4. Start the local dashboard
 
 ```bash
 streamlit run app.py --server.port 8503
 ```
 
-浏览器打开：
+Then open:
 
 - [http://localhost:8503](http://localhost:8503)
 
-## 当前状态
+## Current state
 
-目前这套系统已经可以完成下面这些事情：
+At this stage, the project can already:
 
-- 连接 Alpaca Market Data API
-- 获取 movers、snapshots、latest quotes、latest bars、historical bars
-- 获取 Alpaca News
-- 获取 SEC RSS（前提是 `SEC_USER_AGENT` 合规）
-- 生成 shortlist
-- 计算规则分数和结构标签
-- 计算 Base / Breakout / Pullback / Invalidation
-- 保存到 SQLite 供后续 replay 使用
-- 在本地仪表盘里展示运行状态、候选表和单票详情
+- connect to Alpaca Market Data API
+- fetch movers, snapshots, latest quotes, latest bars, and historical bars
+- ingest Alpaca News
+- ingest SEC RSS when `SEC_USER_AGENT` is valid
+- generate a shortlist
+- compute rule-based scores and status tags
+- compute Base / Breakout / Pullback / Invalidation zones
+- save results into SQLite for later replay work
+- display run status, shortlist tables, and symbol detail views in the local dashboard
 
-## 还没有完全做完的部分
+## What is still in progress
 
-目前我把这个项目看成一个持续迭代的研究工具，而不是已经完成的产品。还在继续补强的点主要有：
+I see this project as an evolving research tool rather than a finished product. The main areas still being improved are:
 
-- 更稳的事件主题识别
-- 更好的行业 / 主题映射
-- 更完整的 replay 指标
-- LightGBM 模型在足够样本下的稳定训练和验证
-- websocket 驱动的更实时更新
-- 更成熟的策略模板研究
+- stronger event-theme detection
+- better industry / theme mapping
+- deeper replay statistics
+- more stable LightGBM training and validation once enough sample data exists
+- websocket-driven real-time updates
+- more mature strategy template research
 
-换句话说，规则层和本地工作台已经能用，模型层和更深的研究层还在继续打磨。
+So the rule-based layer and local workstation are already usable, while the deeper model and research layers are still being refined.
 
-## 这个项目不做什么
+## What this project does not do
 
-为了避免误解，这里也明确一下它**不做的事**：
+To avoid confusion, this project does not:
 
-- 不自动下单
-- 不承诺收益
-- 不输出“稳赚”或“无风险”建议
-- 不把所有股票都塞进候选
-- 不把黑箱模型包装成“神预测”
+- place orders automatically
+- promise profits
+- output "guaranteed" trade ideas
+- throw every stock into the shortlist
+- present a black-box model as if it were a magical predictor
 
-这个项目的定位一直很明确：  
-**它是一个本地运行的短线分析工作台，用来提高观察效率和判断质量，而不是代替交易决策本身。**
+The role of the project is very specific:
 
-## 备注
+It is a local intraday analysis workstation meant to improve observation speed and decision quality, not to replace trading judgment itself.
 
-如果我要把这个项目继续往下推进，我会优先做两件事：
+## Notes
 
-1. 继续提升 shortlist 的可执行性，减少“只能看不能动”的票  
-2. 在样本积累足够以后，把 LightGBM 的训练、验证和回放统计真正跑起来
+If I keep pushing the project forward, the two highest-priority areas are:
 
-这也是我现在把它放到 GitHub 上的原因：它已经不是一个零散脚本，而是一套有明确结构、可以持续迭代的个人项目。
+1. making the shortlist more executable and less watch-only
+2. turning the LightGBM layer into something properly trained, validated, and replay-tested once enough historical samples accumulate
+
+That is also why I wanted the project on GitHub in the first place: it is no longer a loose collection of scripts, but a structured personal project with room to keep growing.

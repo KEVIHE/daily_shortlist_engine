@@ -220,12 +220,12 @@ def _quote_or_row(quote: dict[str, Any], key: str, fallback: Any) -> Any:
 def _range_reason(row: dict[str, Any]) -> str:
     setup = str(row.get("setup_bias") or "neutral")
     if setup == "breakout":
-        return "结构更偏突破跟随，重点看阻力上沿是否被确认。"
+        return "The structure leans toward breakout continuation, so the focus is on whether the upper resistance area gets confirmed."
     if setup == "pullback":
-        return "结构更偏回踩观察，优先看 VWAP 附近承接。"
+        return "The structure leans toward a pullback setup, so the first thing to watch is whether buyers hold near VWAP."
     if setup == "extended":
-        return "强度还在，但离合理追击区已经偏远。"
-    return "当前更适合观察，等待结构更清晰。"
+        return "Momentum is still present, but price is already too far from a reasonable chase zone."
+    return "The name is better treated as watch-only until the structure becomes clearer."
 
 
 def _safe_debug(payload: dict[str, Any]) -> dict[str, Any]:

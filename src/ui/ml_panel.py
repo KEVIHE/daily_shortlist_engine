@@ -31,9 +31,9 @@ def render_ml_summary(run_status: dict[str, Any], latest_df: pd.DataFrame) -> No
 
 def render_model_runs(model_runs: pd.DataFrame) -> None:
     """Show recent model training metadata and feature importance."""
-    render_section_header("Model Validation", "最近的训练/验证/测试切分和特征重要性。")
+    render_section_header("Model Validation", "Recent train/validation/test splits and feature importance.")
     if model_runs.empty:
-        st.info("模型还没有成功训练。当前会优雅回退到规则评分层。")
+        st.info("The model has not trained successfully yet. The system is currently falling back to the rule-based scoring layer.")
         return
     display = model_runs.copy()
     st.dataframe(display[["model_name", "model_version", "train_start", "train_end", "valid_start", "valid_end", "test_start", "test_end", "created_at"]], hide_index=True, width="stretch")
@@ -50,7 +50,7 @@ def render_model_runs(model_runs: pd.DataFrame) -> None:
 
 def render_prediction_panel(row: dict[str, Any]) -> None:
     """Render the candidate-level ML outputs in the detail panel."""
-    render_section_header("ML Layer", "排序、概率和上下轨预测。数据不足时自动回退到规则层。")
+    render_section_header("ML Layer", "Ranking, probability estimates, and upper/lower band forecasts. Falls back automatically when data is insufficient.")
     render_metric_cards([
         ("ML Score", _fmt_score(row.get("ml_score")), "Model-assisted ranking"),
         ("Breakout Prob", _fmt_prob(row.get("breakout_probability")), "Future 15m breakout-first estimate"),

@@ -14,7 +14,7 @@ def render_replay_page(db_path) -> None:
     """Render replay metrics, model validation, and strategy research outcomes."""
     metrics = load_replay_metrics(db_path)
     overview = metrics["overview"]
-    render_section_header("Replay / Evaluation", "命中率、模型验证和策略候选模板都在这里看。")
+    render_section_header("Replay / Evaluation", "Review hit rates, model validation, and candidate strategy templates here.")
 
     cards = st.columns(4)
     cards[0].metric("Predictions", int(overview.get("total_predictions") or 0))
@@ -23,37 +23,37 @@ def render_replay_page(db_path) -> None:
     cards[3].metric("Breakout Hit", _fmt_pct(overview.get("breakout_zone_hit_rate")))
     st.metric("Invalidation First", _fmt_pct(overview.get("invalidation_first_rate")))
 
-    render_section_header("By Catalyst Type", "按催化类型拆分看命中率和未来 15 分钟平均表现。")
+    render_section_header("By Catalyst Type", "Break down hit rates and average 15-minute performance by catalyst type.")
     by_catalyst = metrics["by_catalyst"]
     if by_catalyst.empty:
         st.info("Replay outcomes are not available yet. Let the system accumulate more snapshots and backfilled bars.")
     else:
         st.dataframe(_format_metric_frame(by_catalyst), hide_index=True, width="stretch")
 
-    render_section_header("By Status Tag", "看 Breakout / Pullback / Risky 等状态标签在历史上表现如何。")
+    render_section_header("By Status Tag", "See how Breakout, Pullback, Risky, and other status tags have behaved historically.")
     by_status = metrics["by_status"]
     if by_status.empty:
         st.info("No status-tag replay metrics are available yet.")
     else:
         st.dataframe(_format_metric_frame(by_status), hide_index=True, width="stretch")
 
-    render_section_header("By ML Bucket", "按 ML Score 分层观察 breakout hit 与 invalidation 先触发比例。")
+    render_section_header("By ML Bucket", "Group by ML score bucket to compare breakout hits and invalidation-first rates.")
     by_ml_bucket = metrics["by_ml_bucket"]
     if by_ml_bucket.empty:
         st.info("ML score bucket analysis is not available yet.")
     else:
         st.dataframe(_format_metric_frame(by_ml_bucket), hide_index=True, width="stretch")
 
-    render_section_header("Strategy Candidates", "这些只是候选正期望模板，不等于可直接实盘的保证盈利策略。")
+    render_section_header("Strategy Candidates", "These are only positive-expectancy candidates for research, not guaranteed live-trading strategies.")
     strategy_candidates = metrics["strategy_candidates"]
     if strategy_candidates.empty:
-        st.info("还没有足够的历史样本去评估策略模板。")
+        st.info("There are not enough historical samples yet to evaluate strategy templates.")
     else:
         st.dataframe(_format_metric_frame(strategy_candidates), hide_index=True, width="stretch")
 
     render_model_runs(metrics["model_runs"])
 
-    render_section_header("Recent Predictions", "最近记录下来的候选与其后续 15 分钟 outcome。")
+    render_section_header("Recent Predictions", "Recently recorded candidates and their following 15-minute outcomes.")
     recent = metrics["recent_predictions"]
     if recent.empty:
         st.info("No candidate snapshots have been recorded yet.")

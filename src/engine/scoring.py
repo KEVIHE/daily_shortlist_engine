@@ -165,33 +165,33 @@ def _is_tradeable(row: pd.Series, settings: EngineSettings) -> bool:
 def _tradeable_reason(row: pd.Series) -> str:
     reasons: list[str] = []
     if float(row.get("relative_volume", 0.0)) >= 1.2:
-        reasons.append("相对量能达标")
+        reasons.append("relative volume is strong enough")
     if float(row.get("spread_pct", 0.0)) <= 0.4:
-        reasons.append("点差可控")
+        reasons.append("spread is manageable")
     if float(row.get("dollar_volume", 0.0)) >= 5_000_000:
-        reasons.append("成交额充足")
+        reasons.append("dollar volume is healthy")
     if str(row.get("status_tag") or "") == "Breakout Watch":
-        reasons.append("接近突破区")
+        reasons.append("near the breakout zone")
     if str(row.get("status_tag") or "") == "Pullback Watch":
-        reasons.append("回踩结构清晰")
-    return "、".join(reasons) or "需要更多确认"
+        reasons.append("pullback structure is clear")
+    return ", ".join(reasons) or "needs more confirmation"
 
 
 def _not_tradeable_reason(row: pd.Series, settings: EngineSettings) -> str:
     reasons: list[str] = []
     if float(row.get("spread_pct", 0.0)) > settings.max_spread_pct:
-        reasons.append("点差过宽")
+        reasons.append("spread is too wide")
     if float(row.get("dollar_volume", 0.0)) < settings.min_dollar_volume:
-        reasons.append("成交额不足")
+        reasons.append("dollar volume is too low")
     if float(row.get("relative_volume", 0.0)) < settings.min_relative_volume:
-        reasons.append("相对量能不够")
+        reasons.append("relative volume is too weak")
     if str(row.get("status_tag") or "") == "Extended":
-        reasons.append("已明显延伸")
+        reasons.append("already extended")
     if str(row.get("status_tag") or "") == "Risky":
-        reasons.append("风险权重偏高")
+        reasons.append("risk weighting is too high")
     if str(row.get("status_tag") or "") == "Ignore":
-        reasons.append("没有形成可执行结构")
-    return "、".join(reasons) or "无明显阻断因素"
+        reasons.append("no executable structure has formed")
+    return ", ".join(reasons) or "no major blocking factor"
 
 
 def _assign_list_type(row: pd.Series) -> str:
