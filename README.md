@@ -4,7 +4,7 @@ A local intraday stock shortlist and analysis workstation for US equities.
 
 This project is not an auto-trading bot and it does not place orders. The goal is to combine market data, news, and simple explainable rules into a daily shortlist so I can decide which names deserve attention before or during the trading session. Final execution is still manual.
 
-## Why I built this
+## Why I built this 
 
 I became interested in the way short-term volatility shows up around news, unusual volume, and repeated market attention. In practice, the names that move the most are often the ones that start appearing in movers lists, news feeds, and recurring keywords before the rest of the market fully reacts.
 
